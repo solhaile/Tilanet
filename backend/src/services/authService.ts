@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { User, CreateUserRequest, LoginRequest, AuthResponse } from '../types/auth';
 
 // Mock database for demonstration - replace with actual database
@@ -60,7 +60,8 @@ export class AuthService {
 
   static createAuthResponse(user: User): AuthResponse {
     const token = this.generateToken(user);
-    const { password, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
 
     return {
       user: userWithoutPassword,

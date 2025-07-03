@@ -4,7 +4,7 @@ export const signupValidation = [
   body('phone')
     .notEmpty()
     .withMessage('Phone number is required')
-    .matches(/^\+?[\d\s\-\(\)]+$/)
+    .matches(/^\+?[\d\s\-()]+$/)
     .withMessage('Please provide a valid phone number'),
   
   body('password')
@@ -32,7 +32,7 @@ export const signinValidation = [
   body('phone')
     .notEmpty()
     .withMessage('Phone number is required')
-    .matches(/^\+?[\d\s\-\(\)]+$/)
+    .matches(/^\+?[\d\s\-()]+$/)
     .withMessage('Please provide a valid phone number'),
   
   body('password')
