@@ -10,6 +10,15 @@ on:
     paths:
       - 'backend/**'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
 
 env:
   AZURE_WEBAPP_NAME: tilanet-idir-app    # Set this to your app name
@@ -53,22 +62,34 @@ jobs:
         cd backend
         npm run build
 
+    - name: Prepare deployment package
+      run: |
+        # Create clean deployment directory
+        mkdir deploy-package
+        cd backend
+        
+        # Copy only what's needed for production
+        cp -r dist ../deploy-package/
+        cp package.json ../deploy-package/
+        cp package-lock.json ../deploy-package/
+        
+        # Copy deployment configuration files
+        if [ -f .deployment ]; then cp .deployment ../deploy-package/; fi
+        if [ -f web.config ]; then cp web.config ../deploy-package/; fi
+
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
       with:
         name: node-app
-        path: |
-          backend/dist
-          backend/package*.json
-          backend/node_modules
+        path: deploy-package
 
-  deploy:
+  deploy-staging:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
-      name: 'production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      name: 'staging'
+      url: ${{ steps.deploy-to-staging.outputs.webapp-url }}
 
     steps:
     - name: Download artifact from build job
@@ -76,11 +97,111 @@ jobs:
       with:
         name: node-app
 
-    - name: 'Deploy to Azure Web App'
-      id: deploy-to-webapp
+    - name: 'Deploy to Azure Web App Staging Slot'
+      id: deploy-to-staging
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        slot-name: 'staging'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: .
+
+    - name: 'Wait for staging deployment to stabilize'
+      run: |
+        echo "⏳ Waiting for deployment to stabilize..."
+        sleep 60
+
+    - name: 'Run smoke tests on staging'
+      run: |
+        # Additional wait for app to fully start
+        sleep 30
+        
+        echo "🔍 Testing staging deployment..."
+        
+        # Basic health check with more detailed error reporting
+        STAGING_URL="https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/health"
+        echo "📍 Health check URL: $STAGING_URL"
+        
+        # Retry logic for health check
+        for i in {1..5}; do
+          echo "🔄 Health check attempt $i/5..."
+          if curl -f -s "$STAGING_URL"; then
+            echo "✅ Staging deployment successful and health check passed"
+            echo "🔗 Staging URL: https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net"
+            exit 0
+          else
+            echo "❌ Health check failed, retrying in 30 seconds..."
+            sleep 30
+          fi
+        done
+        
+        echo "💥 Staging health check failed after 5 attempts"
+        echo "🔍 Check Azure App Service logs for more details"
+        exit 1
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-production.outputs.webapp-url }}
+
+    steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: node-app
+
+    - name: 'Deploy to Azure Web App Production'
+      id: deploy-to-production
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         slot-name: 'production'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .
+
+    - name: 'Swap staging to production (alternative method)'
+      if: false  # Set to true if you prefer slot swapping instead of direct deployment
+      uses: azure/cli@v1
+      with:
+        inlineScript: |
+          az webapp deployment slot swap \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --slot staging \
+            --target-slot production
+
+    - name: 'Run production smoke tests'
+      run: |
+        # Wait for deployment to be ready
+        sleep 30
+        
+        echo "🔍 Testing production deployment..."
+        
+        # Basic health check with retry logic
+        PRODUCTION_URL="https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/health"
+        echo "📍 Health check URL: $PRODUCTION_URL"
+        
+        # Retry logic for health check
+        for i in {1..5}; do
+          echo "🔄 Health check attempt $i/5..."
+          if curl -f -s "$PRODUCTION_URL"; then
+            echo "✅ Production deployment successful and health check passed"
+            echo "🔗 Production URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+            exit 0
+          else
+            echo "❌ Health check failed, retrying in 30 seconds..."
+            sleep 30
+          fi
+        done
+        
+        echo "💥 Production health check failed after 5 attempts"
+        echo "🔍 Check Azure App Service logs for more details"
+        exit 1
+
+    - name: 'Notify deployment success'
+      run: |
+        echo "🎉 Deployment to production completed successfully!"
+        echo "📊 Check monitoring and logs for any issues"

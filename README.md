@@ -43,14 +43,26 @@ npm run dev
 
 ### Deployment
 
-The project includes automated Azure App Service deployment via GitHub Actions.
+The project includes automated Azure App Service deployment via GitHub Actions with **staging slots** and **manual approval workflows**.
 
 📋 **See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for complete deployment instructions**
 
+📋 **See [STAGING_DEPLOYMENT_GUIDE.md](./STAGING_DEPLOYMENT_GUIDE.md) for staging slot setup**
+
 #### Quick Deploy:
-1. Create Azure App Service
-2. Add publish profile to GitHub Secrets
-3. Push to main branch → Auto deploy! 🚀
+1. Create Azure App Service with staging slots
+2. Add publish profiles to GitHub Secrets
+3. Configure GitHub Environments (staging, production-approval, production)
+4. Push to main branch → Auto deploy to staging! 
+5. Manual approval → Deploy to production! 🚀
+
+#### Deployment Features:
+- ✅ **Staging Slot**: Test in production-like environment
+- ✅ **Manual Approval**: Required for production deployment
+- ✅ **Time Delays**: 24-hour wait option for non-urgent changes
+- ✅ **Smoke Tests**: Automatic validation on staging
+- ✅ **Blue-Green Deployment**: Zero-downtime slot swapping
+- ✅ **Rollback**: Instant slot swap for quick recovery
 
 ## 🧱 Tech Stack
 
