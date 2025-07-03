@@ -99,6 +99,7 @@ npm run test:watch
 
 ## 🚀 Deployment
 
+### Local Development
 1. Build the project:
    ```bash
    npm run build
@@ -109,16 +110,47 @@ npm run test:watch
    npm start
    ```
 
+### Azure App Service Deployment
+
+This project is configured for automatic deployment to Azure App Service using GitHub Actions.
+
+#### Quick Deploy Steps:
+1. **Create Azure App Service** (Node.js 18 LTS, Linux)
+2. **Set environment variables** in Azure App Service Configuration
+3. **Add publish profile** to GitHub Secrets as `AZURE_WEBAPP_PUBLISH_PROFILE`
+4. **Push to main branch** - automatic deployment will trigger
+
+#### Required Azure Environment Variables:
+```bash
+NODE_ENV=production
+PORT=8000
+JWT_SECRET=your-production-secret
+DATABASE_URL=your-postgresql-connection-string
+CORS_ORIGIN=https://your-frontend-domain.com
+WEBSITES_PORT=8000
+```
+
+📋 **See [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) for detailed deployment instructions.**
+
+### GitHub Actions Workflow
+
+The deployment workflow (`.github/workflows/deploy-backend.yml`) automatically:
+- ✅ Installs dependencies
+- ✅ Runs tests and linting
+- ✅ Builds the TypeScript project
+- ✅ Deploys to Azure App Service on main branch push
+
 ## 📄 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment mode | `development` |
-| `PORT` | Server port | `3000` |
-| `JWT_SECRET` | JWT signing secret | Required |
-| `JWT_EXPIRES_IN` | JWT expiration time | `7d` |
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-| `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:3000` |
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `NODE_ENV` | Environment mode | `development` | Yes |
+| `PORT` | Server port | `3000` | No |
+| `JWT_SECRET` | JWT signing secret | - | **Yes** |
+| `JWT_EXPIRES_IN` | JWT expiration time | `7d` | No |
+| `DATABASE_URL` | PostgreSQL connection string | - | **Yes** |
+| `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:3000` | No |
+| `WEBSITES_PORT` | Azure App Service port | `8000` | Azure only |
 
 ## 🤝 Contributing
 
