@@ -19,6 +19,19 @@ on:
         options:
         - staging
         - production
+        - both
+      production_delay:
+        description: 'Hours to wait before production deployment (if deploying both)'
+        required: false
+        default: '0'
+        type: choice
+        options:
+        - '0'
+        - '1'
+        - '4'
+        - '8'
+        - '24'
+        - '48'
 
 env:
   AZURE_WEBAPP_NAME: tilanet-idir-app    # Set this to your app name
@@ -86,7 +99,10 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: |
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') ||
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'both'))
     environment:
       name: 'staging'
       url: ${{ steps.deploy-to-staging.outputs.webapp-url }}
@@ -116,7 +132,7 @@ jobs:
         # Additional wait for app to fully start
         sleep 30
         
-        echo "🔍 Testing staging deployment..."
+        echo "🔍 Testing staging deployment ..."
         
         # Basic health check with more detailed error reporting
         STAGING_URL="https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/health"
@@ -139,10 +155,40 @@ jobs:
         echo "🔍 Check Azure App Service logs for more details"
         exit 1
 
-  deploy-production:
+  wait-for-approval:
     runs-on: ubuntu-latest
     needs: [build, deploy-staging]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: |
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') ||
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.environment == 'production' || github.event.inputs.environment == 'both'))
+    environment:
+      name: 'production-approval'
+    
+    steps:
+    - name: 'Wait for production deployment approval'
+      run: |
+        DELAY_HOURS="${{ github.event.inputs.production_delay || '0' }}"
+        
+        if [ "$DELAY_HOURS" != "0" ]; then
+          echo "⏰ Waiting $DELAY_HOURS hours before production deployment..."
+          echo "⚠️  You can cancel this workflow if needed during the wait period"
+          
+          DELAY_SECONDS=$((DELAY_HOURS * 3600))
+          echo "🕐 Sleep started at: $(date)"
+          sleep $DELAY_SECONDS
+          echo "🕐 Sleep completed at: $(date)"
+        fi
+        
+        echo "✅ Proceeding with production deployment"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging, wait-for-approval]
+    if: |
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') ||
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.environment == 'production' || github.event.inputs.environment == 'both'))
     environment:
       name: 'production'
       url: ${{ steps.deploy-to-production.outputs.webapp-url }}
