@@ -83,14 +83,23 @@ jobs:
         mkdir deploy-package
         cd backend
         
-        # Copy only what's needed for production
+        # Copy everything needed for Azure deployment
         cp -r dist ../deploy-package/
         cp package.json ../deploy-package/
         cp package-lock.json ../deploy-package/
         
+        # Ensure Azure runs npm install by adding post deployment script
+        echo '#!/bin/sh' > ../deploy-package/deploy.sh
+        echo 'npm install --production' >> ../deploy-package/deploy.sh
+        chmod +x ../deploy-package/deploy.sh
+        
         # Copy deployment configuration files
         if [ -f .deployment ]; then cp .deployment ../deploy-package/; fi
         if [ -f web.config ]; then cp web.config ../deploy-package/; fi
+        
+        # Verify deployment package structure
+        echo "📋 Deployment package contents:"
+        ls -la ../deploy-package/
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
