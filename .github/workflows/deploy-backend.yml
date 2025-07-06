@@ -125,7 +125,6 @@ jobs:
               "value": "3000"
             }
           ]
-        connection-string-json: '[]'
 
     - name: 'Set startup command'
       uses: azure/cli@v1
