@@ -61,11 +61,15 @@ jobs:
         cp package-lock.json ../deploy-package/
         
         # Copy the existing startup script
-        cp startup.sh ../deploy-package/      
+        cp startup.sh ../deploy-package/
+        
+        # Install production dependencies in deployment package
+        cd ../deploy-package
+        npm ci --omit=dev
         
         # Verify deployment package structure
         echo "📋 Deployment package contents:"
-        ls -la ../deploy-package/
+        ls -la
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
@@ -95,23 +99,37 @@ jobs:
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
         package: .
 
-    # - name: 'Configure app settings for proper extraction'
-    #   uses: azure/appservice-settings@v1
-    #   with:
-    #     app-name: ${{ env.AZURE_WEBAPP_NAME }}
-    #     slot-name: 'staging'
-    #     app-settings-json: |
-    #       [
-    #         {
-    #           "name": "WEBSITE_RUN_FROM_PACKAGE",
-    #           "value": "0"
-    #         },
-    #         {
-    #           "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-    #           "value": "false"
-    #         }
-    #       ]
-    #     connection-string-json: '[]'
+    - name: 'Configure app settings for proper extraction'
+      uses: azure/appservice-settings@v1
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        slot-name: 'staging'
+        app-settings-json: |
+          [
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "0"
+            },
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "false"
+            },
+            {
+              "name": "WEBSITE_NODE_DEFAULT_VERSION",
+              "value": "22-lts"
+            }
+          ]
+        connection-string-json: '[]'
+
+    - name: 'Set startup command'
+      uses: azure/cli@v1
+      with:
+        inlineScript: |
+          az webapp config set \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --slot staging \
+            --startup-file "node server.js"
 
     - name: 'Wait for staging deployment to stabilize'
       run: |
