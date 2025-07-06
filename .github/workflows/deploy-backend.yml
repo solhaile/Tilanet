@@ -126,15 +126,15 @@ jobs:
     #         }
     #       ]
 
-    - name: 'Set startup command'
-      uses: azure/cli@v1
-      with:
-        inlineScript: |
-          az webapp config set \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --slot staging \
-            --startup-file "node dist/server.js"
+    # - name: 'Set startup command'
+    #   uses: azure/cli@v1
+    #   with:
+    #     inlineScript: |
+    #       az webapp config set \
+    #         --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
+    #         --name ${{ env.AZURE_WEBAPP_NAME }} \
+    #         --slot staging \
+    #         --startup-file "node dist/server.js"
 
     - name: 'Wait for staging deployment to stabilize'
       run: |
