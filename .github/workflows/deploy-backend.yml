@@ -39,11 +39,7 @@ jobs:
           # Copy everything needed for Azure deployment
           cp package.json dist
           cp package-lock.json dist
-        
-          # Ensure Azure runs npm install by adding post deployment script
-          echo '#!/bin/sh' > dist/deploy.sh
-          echo 'npm install --production' >> dist/deploy.sh
-          chmod +x dist/deploy.sh
+          cp startup.sh dist/
 
       # 4. Push dist/ (now containing your built code + startup.sh) to the staging slot
       - name: Deploy to Azure App Service (staging slot)
