@@ -8,4 +8,4 @@ fi
 
 # Start the application
 echo "🚀 Starting application..."
-node dist/server.js
+node server.js
