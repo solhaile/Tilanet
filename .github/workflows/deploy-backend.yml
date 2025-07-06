@@ -6,20 +6,20 @@ on:
       - main
     paths:
       - 'backend/**'
+      - 'startup.sh'
 
 env:
   NODE_VERSION: '20.x'
-  AZURE_WEBAPP_NAME: 'tilanet-app'
 
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout your code
+      # 1. Check out the code
       - uses: actions/checkout@v4
 
-      # 2. Install Node, caching npm
+      # 2. Install Node.js (cache npm)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -27,20 +27,24 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      # 3. Install deps, test, lint, build
+      # 3. Install, test, lint, build—and copy startup.sh into dist/
       - name: Install, Test & Build
-        working-directory: backend
         run: |
+          cd backend
           npm ci
           npm test
           npm run lint
           npm run build
 
-      # 4. Deploy the built dist/ folder to staging slot
+          # copy your startup script into the folder we'll deploy
+          # adjust path if startup.sh lives elsewhere
+          cp ../startup.sh dist/
+
+      # 4. Push dist/ (now containing your built code + startup.sh) to the staging slot
       - name: Deploy to Azure App Service (staging slot)
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }} 
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           slot-name: staging
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
           package: backend/dist
