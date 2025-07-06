@@ -9,8 +9,9 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: tilanet-app    # Set this to your app name
+  AZURE_RESOURCE_GROUP: tilanet-rg  # Set this to your resource group name
   AZURE_WEBAPP_PACKAGE_PATH: './backend'    # Set this to the path to your backend
-  NODE_VERSION: '22.x'                      # Set this to the node version to use
+  NODE_VERSION: '22.x'                      # Set this to the node version to use  
 
 jobs:
   build:
@@ -133,3 +134,66 @@ jobs:
         echo "💥 Staging health check failed after 5 attempts"
         echo "🔍 Check Azure App Service logs for more details"
         exit 1
+
+  promote-to-production:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    environment:
+      name: 'production'
+      url: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net
+
+    steps:
+    - name: 'Login to Azure'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: 'Swap staging to production'
+      uses: azure/cli@v1
+      with:
+        inlineScript: |
+          echo "🔄 Swapping staging slot to production..."
+          az webapp deployment slot swap \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --slot staging \
+            --target-slot production
+
+    - name: 'Wait for production deployment to stabilize'
+      run: |
+        echo "⏳ Waiting for production deployment to stabilize..."
+        sleep 30
+
+    - name: 'Run production health check'
+      run: |
+        echo "🔍 Testing production deployment..."
+        
+        # Production health check
+        PRODUCTION_URL="https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/health"
+        echo "📍 Production health check URL: $PRODUCTION_URL"
+        
+        # Retry logic for production health check
+        for i in {1..5}; do
+          echo "🔄 Production health check attempt $i/5..."
+          if curl -f -s "$PRODUCTION_URL"; then
+            echo "🎉 Production deployment successful and health check passed!"
+            echo "🌐 Production URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+            echo "🔗 Staging URL: https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net"
+            exit 0
+          else
+            echo "❌ Production health check failed, retrying in 30 seconds..."
+            sleep 30
+          fi
+        done
+        
+        echo "💥 Production health check failed after 5 attempts"
+        echo "🚨 Consider rolling back the deployment!"
+        exit 1
+
+    - name: 'Deployment Summary'
+      if: success()
+      run: |
+        echo "🎯 Deployment Summary:"
+        echo "✅ Staging: https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net"
+        echo "✅ Production: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+        echo "📊 Both environments are healthy and ready!"
