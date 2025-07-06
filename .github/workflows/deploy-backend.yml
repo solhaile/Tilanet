@@ -8,7 +8,7 @@ on:
       - '.github/workflows/deploy-backend.yml'
 
 env:
-  AZURE_WEBAPP_NAME: tilanet-idir-app    # Set this to your app name
+  AZURE_WEBAPP_NAME: tilanet-app    # Set this to your app name
   AZURE_WEBAPP_PACKAGE_PATH: './backend'    # Set this to the path to your backend
   NODE_VERSION: '22.x'                      # Set this to the node version to use
 
