@@ -65,11 +65,13 @@ jobs:
         
         # Install production dependencies in deployment package
         cd ../deploy-package
-        npm ci --omit=dev
+        npm ci --only=production
         
         # Verify deployment package structure
         echo "📋 Deployment package contents:"
         ls -la
+        echo "📋 Node modules check:"
+        ls -la node_modules/ | head -10
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
@@ -117,6 +119,10 @@ jobs:
             {
               "name": "WEBSITE_NODE_DEFAULT_VERSION",
               "value": "22-lts"
+            },
+            {
+              "name": "PORT",
+              "value": "3000"
             }
           ]
         connection-string-json: '[]'
@@ -129,7 +135,7 @@ jobs:
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --slot staging \
-            --startup-file "node server.js"
+            --startup-file "node dist/server.js"
 
     - name: 'Wait for staging deployment to stabilize'
       run: |
