@@ -244,11 +244,11 @@ jobs:
             --slot staging \
             --target-slot production
 
-    - name: 'Run database migrations'
+    - name: 'Note: Database migrations will run on app startup'
       run: |
-        echo "🗄️ Running database migrations on production..."
-        cd backend
-        DATABASE_URL=${{ secrets.DATABASE_URL }} npm run db:migrate
+        echo "🗄️ Database migrations will be handled by the startup script"
+        echo "📋 The startup.sh script will run migrations before starting the app"
+        echo "🔧 This ensures migrations run in the correct environment with proper credentials"
 
     - name: 'Wait for production deployment to stabilize'
       run: |

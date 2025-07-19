@@ -11,8 +11,8 @@ const config: Config = {
   dbCredentials: {
     connectionString: databaseUrl!,
   },
-  verbose: true,
-  strict: true,
+  // verbose: true,
+  // strict: true,
 };
 
 export default config;

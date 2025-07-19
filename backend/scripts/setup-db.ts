@@ -1,6 +1,9 @@
 #!/usr/bin/env ts-node
 
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import * as schema from '../src/db/schema';
 import dotenv from 'dotenv';
 import { execSync } from 'child_process';
 
