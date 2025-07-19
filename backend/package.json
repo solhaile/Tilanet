@@ -18,11 +18,11 @@
     "format": "prettier --write src/**/*.ts",
     "prestart": "npm run build",
     "deploy:azure": "npm run build && npm start",
-    "db:generate": "drizzle-kit generate:pg",
-    "db:migrate": "drizzle-kit push:pg",
-    "db:migrate:test": "cross-env NODE_ENV=test drizzle-kit push:pg",
-    "db:studio": "drizzle-kit studio",
-    "db:setup-test": "ts-node scripts/setup-test-db.ts",
+    "db:generate": "drizzle-kit generate:pg --config=drizzle.config.ts",
+    "db:migrate": "ts-node scripts/setup-db.ts",
+    "db:migrate:test": "cross-env NODE_ENV=test drizzle-kit push:pg --config=drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
+    "db:setup-test": "ts-node scripts/setup-db.ts",
     "db:seed-test": "cross-env NODE_ENV=test ts-node scripts/seed-test-data.ts"
   },
   "keywords": [

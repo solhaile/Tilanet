@@ -8,19 +8,25 @@ This directory contains database-related scripts that follow modern best practic
 ✅ **Type-Safe Migrations**: Drizzle generates migrations from TypeScript schema  
 ✅ **Version Control**: Automatic migration tracking and history  
 ✅ **Consistency**: All schema changes go through the same workflow  
+✅ **Environment Agnostic**: Single script works for all environments  
 
 ## 📁 **Scripts**
 
-### `setup-test-db.ts`
-Creates test database and runs migrations using Drizzle.
+### `setup-db.ts` (Unified Database Script)
+Handles database setup and migrations for any environment.
 
 ```bash
+# For test environment
 npm run db:setup-test
+
+# For any environment (development, staging, production)
+npm run db:migrate
 ```
 
 **What it does:**
-- Creates `tilanet_test` database if it doesn't exist
-- Runs all Drizzle migrations on the test database
+- **Test Environment**: Creates test database + runs migrations
+- **Other Environments**: Runs migrations on existing database
+- Uses `DATABASE_URL` environment variable
 - Handles connection errors gracefully
 
 ### `seed-test-data.ts`
@@ -45,7 +51,7 @@ npm run db:seed-test
 ### **For Production:**
 1. **Generate Migration**: `npm run db:generate`
 2. **Review Migration**: Check generated SQL in `drizzle/` folder
-3. **Apply Migration**: `npm run db:migrate`
+3. **Apply Migration**: `npm run db:migrate` (uses production DATABASE_URL)
 
 ## 🔧 **Available Commands**
 
@@ -53,11 +59,8 @@ npm run db:seed-test
 # Generate new migration from schema changes
 npm run db:generate
 
-# Apply migrations to development database
+# Apply migrations to current environment database
 npm run db:migrate
-
-# Apply migrations to test database
-npm run db:migrate:test
 
 # Setup test database (create + migrate)
 npm run db:setup-test
@@ -68,6 +71,20 @@ npm run db:seed-test
 # Open Drizzle Studio for database inspection
 npm run db:studio
 ```
+
+## 🌍 **Environment Configuration**
+
+The scripts automatically detect the environment from `NODE_ENV`:
+
+- **`NODE_ENV=test`**: Creates test database + runs migrations
+- **`NODE_ENV=development`**: Runs migrations on development database
+- **`NODE_ENV=production`**: Runs migrations on production database
+- **No NODE_ENV**: Defaults to development
+
+**Environment Variables:**
+- `DATABASE_URL`: Primary database connection string
+- `TEST_DATABASE_URL`: Test database connection string (optional)
+- `NODE_ENV`: Environment identifier
 
 ## 📝 **Migration Best Practices**
 
@@ -88,7 +105,7 @@ backend/
 │   ├── 0001_*.sql        # Generated migrations
 │   └── meta/             # Migration metadata
 ├── scripts/
-│   ├── setup-test-db.ts  # Test database setup
+│   ├── setup-db.ts  # Unified database setup/migration
 │   ├── seed-test-data.ts # Test data seeding
 │   └── README.md         # This file
 └── drizzle.config.ts     # Drizzle configuration
@@ -100,6 +117,7 @@ backend/
 - ❌ Track migrations manually
 - ❌ Mix TypeScript and raw SQL
 - ❌ Duplicate schema definitions
+- ❌ Create environment-specific scripts
 
 ## 🎉 **Benefits**
 
@@ -107,4 +125,5 @@ backend/
 - **Consistency**: Single workflow for all environments
 - **Maintainability**: Less code to maintain
 - **Reliability**: Automated migration tracking
-- **Developer Experience**: Better tooling and IDE support 
+- **Developer Experience**: Better tooling and IDE support
+- **Simplicity**: One script for all environments 
