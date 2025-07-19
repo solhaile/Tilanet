@@ -82,7 +82,6 @@ jobs:
         NODE_ENV: test
         JWT_SECRET: test-secret-key-for-ci
         USE_MOCK_OTP: true
-        AZURE_COMMUNICATION_CONNECTION_STRING: test-connection-string
       run: |
         cd backend
         echo "🧪 Running tests with PostgreSQL..."
