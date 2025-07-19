@@ -1,129 +1,134 @@
-# Database Scripts
+# Database Setup and Migration Scripts
 
-This directory contains database-related scripts that follow modern best practices using Drizzle ORM.
+This directory contains scripts for managing database setup, migrations, and seeding across different environments.
 
-## 🎯 **Best Practices We Follow**
+## Overview
 
-✅ **Single Source of Truth**: All schema definitions are in `src/db/schema.ts`  
-✅ **Type-Safe Migrations**: Drizzle generates migrations from TypeScript schema  
-✅ **Version Control**: Automatic migration tracking and history  
-✅ **Consistency**: All schema changes go through the same workflow  
-✅ **Environment Agnostic**: Single script works for all environments  
+The database management system uses a unified approach with a single `DATABASE_URL` environment variable for all environments. The system automatically detects the environment and handles database creation and migrations appropriately.
 
-## 📁 **Scripts**
+## Environment Variables
 
-### `setup-db.ts` (Unified Database Script)
-Handles database setup and migrations for any environment.
+### Required
+- `DATABASE_URL`: Database connection string for the current environment
+  - **Development**: `postgresql://postgres:password@localhost:5432/tilanet_dev`
+  - **Test**: `postgresql://postgres:password@localhost:5432/tilanet_test`
+  - **Production**: `postgresql://user:password@host:5432/tilanet_prod`
 
+### Optional
+- `NODE_ENV`: Environment name (`development`, `test`, `production`)
+- `GITHUB_ACTIONS`: Set to `true` when running in GitHub Actions (automatically detected)
+
+## Scripts
+
+### `setup-db.ts` - Unified Database Setup
+
+This is the main script that handles database setup for all environments.
+
+**Features:**
+- ✅ Automatic environment detection
+- ✅ Database creation (if needed)
+- ✅ Schema migration using Drizzle Kit
+- ✅ GitHub Actions compatibility
+- ✅ Error handling and logging
+
+**Usage:**
 ```bash
+# For development/production
+npm run db:migrate
+
 # For test environment
 npm run db:setup-test
-
-# For any environment (development, staging, production)
-npm run db:migrate
 ```
 
-**What it does:**
-- **Test Environment**: Creates test database + runs migrations
-- **Other Environments**: Runs migrations on existing database
-- Uses `DATABASE_URL` environment variable
-- Handles connection errors gracefully
+**How it works:**
+1. **Environment Detection**: Determines if running in GitHub Actions, test, or production
+2. **Database Creation**: Creates database if it doesn't exist (skipped in GitHub Actions)
+3. **Schema Migration**: Runs Drizzle Kit push to update schema
+4. **Error Handling**: Provides clear error messages and troubleshooting tips
 
-### `seed-test-data.ts`
-Seeds the test database with sample data for testing.
+### `seed-test-data.ts` - Test Data Seeding
 
+Populates the test database with sample data for testing.
+
+**Usage:**
 ```bash
 npm run db:seed-test
 ```
 
-## 🚀 **Database Workflow**
+## GitHub Actions Integration
 
-### **For Development:**
-1. **Modify Schema**: Edit `src/db/schema.ts`
-2. **Generate Migration**: `npm run db:generate`
-3. **Apply Migration**: `npm run db:migrate`
+The scripts are designed to work seamlessly with GitHub Actions:
 
-### **For Testing:**
-1. **Setup Test DB**: `npm run db:setup-test`
-2. **Seed Test Data**: `npm run db:seed-test` (optional)
-3. **Run Tests**: `npm test`
+1. **Service Container**: PostgreSQL service container provides the database
+2. **Automatic Detection**: Script detects GitHub Actions environment
+3. **Skip Database Creation**: Database already exists in service container
+4. **Schema Updates Only**: Runs only schema migrations
 
-### **For Production:**
-1. **Generate Migration**: `npm run db:generate`
-2. **Review Migration**: Check generated SQL in `drizzle/` folder
-3. **Apply Migration**: `npm run db:migrate` (uses production DATABASE_URL)
+## Best Practices
 
-## 🔧 **Available Commands**
+### 1. Environment Configuration
+- Use a single `DATABASE_URL` for all environments
+- Set environment-specific URLs in your CI/CD pipeline
+- Never commit sensitive credentials to version control
 
+### 2. Migration Strategy
+- Use `drizzle-kit push` for development and testing
+- Use `drizzle-kit migrate` for production (if needed)
+- Always test migrations in staging first
+
+### 3. Error Handling
+- Scripts provide clear error messages
+- Include troubleshooting tips for common issues
+- Log important operations for debugging
+
+### 4. Security
+- Use environment variables for all credentials
+- Rotate database passwords regularly
+- Use connection pooling in production
+
+## Troubleshooting
+
+### Common Issues
+
+**1. Authentication Failed**
+```
+error: password authentication failed for user "postgres"
+```
+**Solution**: Check your `DATABASE_URL` and ensure PostgreSQL is running with correct credentials.
+
+**2. Database Does Not Exist**
+```
+error: database "tilanet_test" does not exist
+```
+**Solution**: The script should create the database automatically. Check if you have admin privileges.
+
+**3. Connection Refused**
+```
+error: connect ECONNREFUSED 127.0.0.1:5432
+```
+**Solution**: Ensure PostgreSQL is running and accessible on the specified port.
+
+### Debug Mode
+
+To enable verbose logging, set the `DEBUG` environment variable:
 ```bash
-# Generate new migration from schema changes
-npm run db:generate
-
-# Apply migrations to current environment database
-npm run db:migrate
-
-# Setup test database (create + migrate)
-npm run db:setup-test
-
-# Seed test database with sample data
-npm run db:seed-test
-
-# Open Drizzle Studio for database inspection
-npm run db:studio
+DEBUG=true npm run db:setup-test
 ```
 
-## 🌍 **Environment Configuration**
-
-The scripts automatically detect the environment from `NODE_ENV`:
-
-- **`NODE_ENV=test`**: Creates test database + runs migrations
-- **`NODE_ENV=development`**: Runs migrations on development database
-- **`NODE_ENV=production`**: Runs migrations on production database
-- **No NODE_ENV**: Defaults to development
-
-**Environment Variables:**
-- `DATABASE_URL`: Primary database connection string
-- `TEST_DATABASE_URL`: Test database connection string (optional)
-- `NODE_ENV`: Environment identifier
-
-## 📝 **Migration Best Practices**
-
-1. **Always generate migrations** when changing schema
-2. **Review generated SQL** before applying
-3. **Test migrations** on test database first
-4. **Commit migration files** to version control
-5. **Never edit migration files** manually
-
-## 🗂️ **File Structure**
+## File Structure
 
 ```
-backend/
-├── src/db/
-│   └── schema.ts          # Single source of truth for schema
-├── drizzle/
-│   ├── 0000_*.sql        # Generated migrations
-│   ├── 0001_*.sql        # Generated migrations
-│   └── meta/             # Migration metadata
-├── scripts/
-│   ├── setup-db.ts  # Unified database setup/migration
-│   ├── seed-test-data.ts # Test data seeding
-│   └── README.md         # This file
-└── drizzle.config.ts     # Drizzle configuration
+scripts/
+├── setup-db.ts          # Main database setup script
+├── seed-test-data.ts    # Test data seeding
+└── README.md           # This documentation
 ```
 
-## ❌ **What We Don't Do**
+## Migration History
 
-- ❌ Create manual SQL files
-- ❌ Track migrations manually
-- ❌ Mix TypeScript and raw SQL
-- ❌ Duplicate schema definitions
-- ❌ Create environment-specific scripts
+The system uses Drizzle Kit for schema management:
+- Schema definition: `src/db/schema.ts`
+- Migration files: `drizzle/`
+- Configuration: `drizzle.config.ts`
 
-## 🎉 **Benefits**
-
-- **Type Safety**: Full TypeScript support
-- **Consistency**: Single workflow for all environments
-- **Maintainability**: Less code to maintain
-- **Reliability**: Automated migration tracking
-- **Developer Experience**: Better tooling and IDE support
-- **Simplicity**: One script for all environments 
+For more information about Drizzle Kit, see the [official documentation](https://orm.drizzle.team/). 

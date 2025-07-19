@@ -8,11 +8,20 @@
     "location": {
       "value": "Canada Central"
     },
-    "sku": {
-      "value": "P0v3"
+    "dbLocation": {
+      "value": "West US"
     },
     "environment": {
       "value": "prod"
+    },
+    "sku": {
+      "value": "P0v3"
+    },
+    "dbAdminLogin": {
+      "value": "tilanetadmin"
+    },
+    "dbAdminPassword": {
+      "value": "REPLACE_WITH_SECURE_PASSWORD"
     }
   }
 }
