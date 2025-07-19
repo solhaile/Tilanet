@@ -17,25 +17,55 @@ const app = express();
 app.use(helmet());
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
-}));
+const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
+interface CorsOptions {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void;
+  credentials: boolean;
+}
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.',
-    error: 'Rate limit exceeded',
+const corsOptions: CorsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void): void => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    
+    // Check if CORS_ORIGIN contains '*' (allow all)
+    if (allowedOrigins.includes('*')) {
+      callback(null, true);
+      return;
+    }
+    
+    // Check if origin is in the allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
-});
-app.use(limiter);
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// Rate limiting - disabled in test mode to allow concurrent request testing
+if (process.env.NODE_ENV !== 'test') {
+  const limiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limit each IP to 100 requests per windowMs
+    message: {
+      success: false,
+      message: 'Too many requests from this IP, please try again later.',
+      error: 'Rate limit exceeded',
+    },
+  });
+  app.use(limiter);
+}
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
+const jsonLimit = process.env.NODE_ENV === 'test' ? '1mb' : '10mb';
+app.use(express.json({ limit: jsonLimit }));
 app.use(express.urlencoded({ extended: true }));
 
 // Logging middleware

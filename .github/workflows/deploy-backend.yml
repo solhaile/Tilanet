@@ -6,6 +6,10 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-backend.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
 
 env:
   AZURE_WEBAPP_NAME: tilanet-app    # Set this to your app name
@@ -14,9 +18,24 @@ env:
   NODE_VERSION: '22.x'                      # Set this to the node version to use  
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: tilanet_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
     - uses: actions/checkout@v4
 
@@ -32,18 +51,68 @@ jobs:
         cd backend
         npm ci
 
-    - name: Run tests
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        echo "⏳ Waiting for PostgreSQL to be ready..."
+        until pg_isready -h localhost -p 5432 -U postgres; do
+          echo "PostgreSQL is not ready yet..."
+          sleep 2
+        done
+        echo "✅ PostgreSQL is ready!"
+
+    - name: Run database migrations
       env:
-        JWT_SECRET: test-secret-key-for-ci
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tilanet_test
         NODE_ENV: test
+        JWT_SECRET: test-secret-key-for-ci
+        USE_MOCK_OTP: true
       run: |
         cd backend
-        npm test
+        echo "🗄️ Running database migrations..."
+        npm run db:migrate
 
-    - name: Run lint
+    - name: Run linting
       run: |
         cd backend
         npm run lint
+
+    - name: Run tests with PostgreSQL
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tilanet_test
+        NODE_ENV: test
+        JWT_SECRET: test-secret-key-for-ci
+        USE_MOCK_OTP: true
+        AZURE_COMMUNICATION_CONNECTION_STRING: test-connection-string
+      run: |
+        cd backend
+        echo "🧪 Running tests with PostgreSQL..."
+        npm test -- --coverage --verbose
+
+    - name: Upload test coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage/lcov.info
+        flags: backend
+        name: backend-coverage
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './backend/package-lock.json'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        npm ci
 
     - name: Build application
       run: |
@@ -83,6 +152,7 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
       name: 'staging'
       url: ${{ steps.deploy-to-staging.outputs.webapp-url }}
@@ -107,40 +177,67 @@ jobs:
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
         package: .
     
-    - name: 'Configure app settings for proper extraction'
-      uses: azure/appservice-settings@v1
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        slot-name: 'staging'
-        app-settings-json: |
-          [
-            {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "0"
-            },
-            {
-              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-              "value": "false"
-            },
-            {
-              "name": "WEBSITE_NODE_DEFAULT_VERSION",
-              "value": "22-lts"
-            },
-            {
-              "name": "PORT",
-              "value": "3000"
-            }
-          ]
+    # - name: 'Configure app settings for staging'
+    #   uses: azure/appservice-settings@v1
+    #   with:
+    #     app-name: ${{ env.AZURE_WEBAPP_NAME }}
+    #     slot-name: 'staging'
+    #     app-settings-json: |
+    #       [
+    #         {
+    #           "name": "WEBSITE_RUN_FROM_PACKAGE",
+    #           "value": "0"
+    #         },
+    #         {
+    #           "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+    #           "value": "false"
+    #         },
+    #         {
+    #           "name": "WEBSITE_NODE_DEFAULT_VERSION",
+    #           "value": "22-lts"
+    #         },
+    #         {
+    #           "name": "PORT",
+    #           "value": "3000"
+    #         },
+    #         {
+    #           "name": "NODE_ENV",
+    #           "value": "staging"
+    #         },
+    #         {
+    #           "name": "DATABASE_URL",
+    #           "value": "${{ secrets.STAGING_DATABASE_URL }}"
+    #         },
+    #         {
+    #           "name": "JWT_SECRET",
+    #           "value": "${{ secrets.JWT_SECRET }}"
+    #         },
+    #         {
+    #           "name": "AZURE_COMMUNICATION_CONNECTION_STRING",
+    #           "value": "${{ secrets.AZURE_COMMUNICATION_CONNECTION_STRING }}"
+    #         }
+    #       ]
 
     - name: 'Set startup command'
       uses: azure/cli@v1
       with:
         inlineScript: |
           az webapp config set \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --slot staging \
             --startup-file "node dist/server.js"
+
+    - name: 'Run database migrations on staging'
+      uses: azure/cli@v1
+      with:
+        inlineScript: |
+          echo "🗄️ Running database migrations on staging..."
+          az webapp ssh \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --slot staging \
+            --command "cd /home/site/wwwroot && npm run db:migrate"
 
     - name: 'Wait for staging deployment to stabilize'
       run: |
@@ -178,6 +275,7 @@ jobs:
   promote-to-production:
     runs-on: ubuntu-latest
     needs: deploy-staging
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
       name: 'production'
       url: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net
@@ -198,6 +296,40 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --slot staging \
             --target-slot production
+
+    # - name: 'Configure app settings for production'
+    #   uses: azure/appservice-settings@v1
+    #   with:
+    #     app-name: ${{ env.AZURE_WEBAPP_NAME }}
+    #     app-settings-json: |
+    #       [
+    #         {
+    #           "name": "NODE_ENV",
+    #           "value": "production"
+    #         },
+    #         {
+    #           "name": "DATABASE_URL",
+    #           "value": "${{ secrets.PRODUCTION_DATABASE_URL }}"
+    #         },
+    #         {
+    #           "name": "JWT_SECRET",
+    #           "value": "${{ secrets.JWT_SECRET }}"
+    #         },
+    #         {
+    #           "name": "AZURE_COMMUNICATION_CONNECTION_STRING",
+    #           "value": "${{ secrets.AZURE_COMMUNICATION_CONNECTION_STRING }}"
+    #         }
+    #       ]
+
+    - name: 'Run database migrations on production'
+      uses: azure/cli@v1
+      with:
+        inlineScript: |
+          echo "🗄️ Running database migrations on production..."
+          az webapp ssh \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --command "cd /home/site/wwwroot && npm run db:migrate"
 
     - name: 'Wait for production deployment to stabilize'
       run: |
@@ -237,3 +369,5 @@ jobs:
         echo "✅ Staging: https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net"
         echo "✅ Production: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
         echo "📊 Both environments are healthy and ready!"
+        echo "🗄️ Database migrations completed successfully"
+        echo "🧪 All tests passed with PostgreSQL"

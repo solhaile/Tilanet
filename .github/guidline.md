@@ -24,13 +24,13 @@ This document provides essential context about the Idir Management SaaS project.
     * **Environment:** North America, Europe, etc. Uses modern Android or iOS devices with reliable, high-speed internet.
     * **Needs:** Professionalism, security, multi-currency awareness, and an English user interface. Tracks payments from various digital sources (Zelle, PayPal, bank transfers).
     * **Tech Proficiency:** High. Expects a smooth, modern app experience.
-3. **Idir Members:** once the leaders approve the usage of the system, it will expand to th emembers to execute all members durties using this app.
+3. **Idir Members:** once the leaders approve the usage of the system, it will expand to the members to execute all members durties using this app.
 
 ---
 
 ## 4. MVP Core Features & Scope (Detailed Breakdown)
 
-### AUTH-01: Secure Leader Authentication
+### AUTH-01: Secure Authentication
 * **User Story:** "As a leader, I want to sign up using my phone number, verify my identity securely, and log in easily so I can access my Idir's records."
 * **Key Functionalities:**
     * select language 

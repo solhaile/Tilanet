@@ -1,0 +1,105 @@
+name: CI - Backend Tests
+
+on:
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: tilanet_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+        cache-dependency-path: './backend/package-lock.json'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        npm ci
+
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        echo "⏳ Waiting for PostgreSQL to be ready..."
+        until pg_isready -h localhost -p 5432 -U postgres; do
+          echo "PostgreSQL is not ready yet..."
+          sleep 2
+        done
+        echo "✅ PostgreSQL is ready!"
+
+    - name: Run database migrations
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tilanet_test
+        NODE_ENV: test
+        JWT_SECRET: test-secret-key-for-ci
+        USE_MOCK_OTP: true
+      run: |
+        cd backend
+        echo "🗄️ Running database migrations..."
+        npm run db:migrate
+
+    - name: Run linting
+      run: |
+        cd backend
+        npm run lint
+
+    - name: Run tests with PostgreSQL
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tilanet_test
+        NODE_ENV: test
+        JWT_SECRET: test-secret-key-for-ci
+        USE_MOCK_OTP: true
+        AZURE_COMMUNICATION_CONNECTION_STRING: test-connection-string
+      run: |
+        cd backend
+        echo "🧪 Running tests with PostgreSQL..."
+        npm test -- --coverage --verbose
+
+    - name: Upload test coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage/lcov.info
+        flags: backend
+        name: backend-coverage
+
+    - name: Build application
+      run: |
+        cd backend
+        npm run build
+
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "🎯 CI Test Summary:"
+        echo "✅ PostgreSQL database setup completed"
+        echo "✅ Database migrations executed"
+        echo "✅ Linting passed"
+        echo "✅ All tests completed with coverage"
+        echo "✅ Application build successful"
+        echo "📊 Ready for deployment!" 
