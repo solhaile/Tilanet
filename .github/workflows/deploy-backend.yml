@@ -133,19 +133,25 @@ jobs:
         cp -r dist ../deploy-package/
         cp package.json ../deploy-package/
         cp package-lock.json ../deploy-package/
-        
-        # Copy the existing startup script
+        cp -r src ../deploy-package/
+        cp -r drizzle ../deploy-package/
+        cp drizzle.config.ts ../deploy-package/
+        cp drizzle.config.js ../deploy-package/
+        cp -r scripts ../deploy-package/
         cp startup.sh ../deploy-package/
+        cp tsconfig.json ../deploy-package/
         
-        # Install production dependencies in deployment package
+        # Install ALL dependencies (including drizzle-kit) in deployment package
         cd ../deploy-package
-        npm ci --only=production
+        npm ci
         
         # Verify deployment package structure
         echo "📋 Deployment package contents:"
         ls -la
         echo "📋 Node modules check:"
         ls -la node_modules/ | head -10
+        echo "📋 drizzle-kit check:"
+        ls -la node_modules/.bin/ | grep drizzle || echo "drizzle-kit not found in .bin"
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4

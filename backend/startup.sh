@@ -12,9 +12,14 @@ if [ -n "$DATABASE_URL" ]; then
     echo "📊 Environment: $NODE_ENV"
     echo "🔗 Database URL: $(echo $DATABASE_URL | sed 's/:[^:@]*@/:***@/')"
     
-    # First check database status
-    echo "🔍 Checking database status..."
-    NODE_ENV=production npm run db:check
+    # Use production-specific setup for production environment
+    if [ "$NODE_ENV" = "production" ]; then
+        echo "🏭 Production environment detected. Running production database setup..."
+        npm run db:setup-production
+    else
+        echo "🔍 Checking database status..."
+        npm run db:check
+    fi
     
     if [ $? -eq 0 ]; then
         echo "✅ Database setup completed successfully"
