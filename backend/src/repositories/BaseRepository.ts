@@ -1,7 +1,7 @@
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { PgTable } from 'drizzle-orm/pg-core';
 
-export class BaseRepository<T, K> {
+export class BaseRepository<T> {
   protected db: NodePgDatabase;
   protected table: PgTable;
 

@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { sessions, users } from '../db/schema';
+import { sessions } from '../db/schema';
 import { eq, and, lt } from 'drizzle-orm';
 import { Session, NewSession } from '../db/schema';
 import logger from '../utils/logger';

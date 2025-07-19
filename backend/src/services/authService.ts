@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { User, NewUser } from '../db/schema';
+import { User } from '../db/schema';
 import { UserRepository } from '../repositories/UserRepository';
 import { SessionRepository } from '../repositories/SessionRepository';
 import { OtpService } from './otpService';
@@ -9,7 +9,6 @@ import {
   CreateUserRequest, 
   LoginRequest, 
   AuthResponse, 
-  TokenPayload,
   OtpVerificationRequest,
   RefreshTokenRequest
 } from '../types/auth';
@@ -197,7 +196,7 @@ export class AuthService {
     const refreshToken = generateRefreshToken();
 
     // Create session
-    const session = await sessionRepository.create({
+    await sessionRepository.create({
       userId: user.id,
       refreshToken,
       deviceInfo,

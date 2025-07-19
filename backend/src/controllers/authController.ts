@@ -4,7 +4,6 @@ import { AuthService } from '../services/authService';
 import { LocaleService } from '../services/localeService';
 import { CreateUserRequest, LoginRequest, OtpVerificationRequest, RefreshTokenRequest } from '../types/auth';
 import { ApiResponse } from '../types/common';
-import logger from '../utils/logger';
 
 export class AuthController {
   static async signup(req: Request, res: Response): Promise<void> {

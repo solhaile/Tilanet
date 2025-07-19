@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { User, NewUser } from '../db/schema';
+import { User } from '../db/schema';
 import { UserRepository } from '../repositories/UserRepository';
 import logger from '../utils/logger';
 
