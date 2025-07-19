@@ -13,13 +13,6 @@
     "test:api": "cross-env NODE_ENV=test jest --testPathPattern=\"(auth|otp|health|integration|rate-limiting)\\.test\\.(ts|js)$\"",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage",
-    "db:push": "cross-env NODE_ENV=${NODE_ENV:-development} drizzle-kit push:pg",
-    "db:push:test": "cross-env NODE_ENV=test drizzle-kit push:pg",
-    "db:create-test": "ts-node scripts/create-test-db.ts",
-    "db:setup-test": "npm run db:create-test && npm run db:push:test",
-    "db:seed-test-data": "cross-env NODE_ENV=test ts-node scripts/seed-test-data.ts",
-    "db:migrate": "cross-env NODE_ENV=${NODE_ENV:-development} ts-node scripts/migrate-auth-updates.ts",
-    "db:migrate:test": "cross-env NODE_ENV=test ts-node scripts/migrate-auth-updates.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
@@ -27,7 +20,10 @@
     "deploy:azure": "npm run build && npm start",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "drizzle-kit push:pg",
-    "db:studio": "drizzle-kit studio"
+    "db:migrate:test": "cross-env NODE_ENV=test drizzle-kit push:pg",
+    "db:studio": "drizzle-kit studio",
+    "db:setup-test": "ts-node scripts/setup-test-db.ts",
+    "db:seed-test": "cross-env NODE_ENV=test ts-node scripts/seed-test-data.ts"
   },
   "keywords": [
     "idir",

@@ -175,47 +175,6 @@ jobs:
         slot-name: 'staging'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
         package: .
-    
-    # - name: 'Configure app settings for staging'
-    #   uses: azure/appservice-settings@v1
-    #   with:
-    #     app-name: ${{ env.AZURE_WEBAPP_NAME }}
-    #     slot-name: 'staging'
-    #     app-settings-json: |
-    #       [
-    #         {
-    #           "name": "WEBSITE_RUN_FROM_PACKAGE",
-    #           "value": "0"
-    #         },
-    #         {
-    #           "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-    #           "value": "false"
-    #         },
-    #         {
-    #           "name": "WEBSITE_NODE_DEFAULT_VERSION",
-    #           "value": "22-lts"
-    #         },
-    #         {
-    #           "name": "PORT",
-    #           "value": "3000"
-    #         },
-    #         {
-    #           "name": "NODE_ENV",
-    #           "value": "staging"
-    #         },
-    #         {
-    #           "name": "DATABASE_URL",
-    #           "value": "${{ secrets.STAGING_DATABASE_URL }}"
-    #         },
-    #         {
-    #           "name": "JWT_SECRET",
-    #           "value": "${{ secrets.JWT_SECRET }}"
-    #         },
-    #         {
-    #           "name": "AZURE_COMMUNICATION_CONNECTION_STRING",
-    #           "value": "${{ secrets.AZURE_COMMUNICATION_CONNECTION_STRING }}"
-    #         }
-    #       ]
 
     - name: 'Set startup command'
       uses: azure/cli@v1
@@ -285,39 +244,11 @@ jobs:
             --slot staging \
             --target-slot production
 
-    # - name: 'Configure app settings for production'
-    #   uses: azure/appservice-settings@v1
-    #   with:
-    #     app-name: ${{ env.AZURE_WEBAPP_NAME }}
-    #     app-settings-json: |
-    #       [
-    #         {
-    #           "name": "NODE_ENV",
-    #           "value": "production"
-    #         },
-    #         {
-    #           "name": "DATABASE_URL",
-    #           "value": "${{ secrets.PRODUCTION_DATABASE_URL }}"
-    #         },
-    #         {
-    #           "name": "JWT_SECRET",
-    #           "value": "${{ secrets.JWT_SECRET }}"
-    #         },
-    #         {
-    #           "name": "AZURE_COMMUNICATION_CONNECTION_STRING",
-    #           "value": "${{ secrets.AZURE_COMMUNICATION_CONNECTION_STRING }}"
-    #         }
-    #       ]
-
-    - name: 'Run database migrations on production'
-      uses: azure/cli@v1
-      with:
-        inlineScript: |
-          echo "🗄️ Running database migrations on production..."
-          az webapp ssh \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --command "cd /home/site/wwwroot && npm run db:migrate"
+    - name: 'Run database migrations'
+      run: |
+        echo "🗄️ Running database migrations on production..."
+        cd backend
+        DATABASE_URL=${{ secrets.DATABASE_URL }} npm run db:migrate
 
     - name: 'Wait for production deployment to stabilize'
       run: |

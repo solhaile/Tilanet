@@ -1,3 +1,5 @@
+#!/usr/bin/env ts-node
+
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
@@ -8,9 +10,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export async function setupTestDatabase() {
+  console.log('🏗️  Setting up test database...');
+  
   // Get the base connection URL without database name
-  const baseUrl = process.env.DATABASE_URL?.replace('/tilanet_dev', '/postgres') || 'postgresql://postgres:Test@2025!@localhost:5432/postgres';
-  const testDbUrl = process.env.TEST_DATABASE_URL || 'postgresql://postgres:Test@2025!@localhost:5432/tilanet_test';
+  const baseUrl = process.env.DATABASE_URL?.replace('/tilanet_dev', '/postgres') || 
+                  'postgresql://postgres:Test@2025!@localhost:5432/postgres';
+  const testDbUrl = process.env.TEST_DATABASE_URL || 
+                   'postgresql://postgres:Test@2025!@localhost:5432/tilanet_test';
 
   // Connect to PostgreSQL to create test database if it doesn't exist
   const adminPool = new Pool({ connectionString: baseUrl });
@@ -24,12 +30,20 @@ export async function setupTestDatabase() {
     if (result.rows.length === 0) {
       // Create test database
       await adminPool.query('CREATE DATABASE tilanet_test');
-      console.log('Test database created successfully');
+      console.log('✅ Test database "tilanet_test" created successfully');
     } else {
-      console.log('Test database already exists');
+      console.log('ℹ️  Test database "tilanet_test" already exists');
     }
-  } catch (error) {
-    console.error('Error creating test database:', error);
+  } catch (error: any) {
+    console.error('❌ Error creating test database:', error);
+    
+    // If authentication fails, provide helpful message
+    if (error.code === '28P01') {
+      console.log('💡 Tip: Make sure PostgreSQL is running and password is correct');
+      console.log('💡 Default connection: postgres:Test@2025!@localhost:5432');
+    }
+    
+    throw error;
   } finally {
     await adminPool.end();
   }
@@ -41,9 +55,10 @@ export async function setupTestDatabase() {
   try {
     // Run migrations on test database
     await migrate(testDb, { migrationsFolder: './drizzle' });
-    console.log('Test database migrations completed');
+    console.log('✅ Test database migrations completed');
   } catch (error) {
-    console.error('Error running migrations:', error);
+    console.error('❌ Error running migrations:', error);
+    throw error;
   } finally {
     await testPool.end();
   }
@@ -53,11 +68,11 @@ export async function setupTestDatabase() {
 if (require.main === module) {
   setupTestDatabase()
     .then(() => {
-      console.log('Test database setup completed');
+      console.log('🎉 Test database setup completed');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('Test database setup failed:', error);
+      console.error('❌ Test database setup failed:', error);
       process.exit(1);
     });
 }
