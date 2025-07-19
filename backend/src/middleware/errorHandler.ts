@@ -7,7 +7,14 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
-  console.error(err.stack);
+  // Don't log expected JSON parsing errors during tests
+  const isTestEnvironment = process.env.NODE_ENV === 'test';
+  const isExpectedJsonError = err.type === 'entity.parse.failed' || 
+                             (err.name === 'SyntaxError' && err.message.includes('JSON'));
+  
+  if (!isTestEnvironment || !isExpectedJsonError) {
+    console.error(err.stack);
+  }
 
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Internal Server Error';

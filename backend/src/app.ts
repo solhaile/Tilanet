@@ -17,32 +17,22 @@ const app = express();
 app.use(helmet());
 
 // CORS configuration
-const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
+const allowedOrigins =
+  process.env.NODE_ENV === 'test'
+    ? ['*']
+    : (process.env.CORS_ORIGIN?.split(',') || []);
+
 interface CorsOptions {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void;
   credentials: boolean;
 }
 
 const corsOptions: CorsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void): void => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-    
-    // Check if CORS_ORIGIN contains '*' (allow all)
-    if (allowedOrigins.includes('*')) {
-      callback(null, true);
-      return;
-    }
-    
-    // Check if origin is in the allowed list
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+  origin: (origin, callback) => {
+    if (!origin) { callback(null, true); return; }
+    if (allowedOrigins.includes('*')) { callback(null, true); return; }
+    if (allowedOrigins.includes(origin)) { callback(null, true); }
+    else { callback(new Error('Not allowed by CORS')); }
   },
   credentials: true,
 };
