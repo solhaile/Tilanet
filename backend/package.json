@@ -23,6 +23,7 @@
     "db:migrate:test": "cross-env NODE_ENV=test drizzle-kit push:pg --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
     "db:setup-test": "ts-node scripts/setup-db.ts",
+    "db:check": "ts-node scripts/check-db.ts",
     "db:seed-test": "cross-env NODE_ENV=test ts-node scripts/seed-test-data.ts"
   },
   "keywords": [

@@ -1,0 +1,503 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-01-19T06:50:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "req_root",
+      "parentId": "wrk_tilanet_api",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/health",
+      "name": "Health Check",
+      "description": "Check if the API is running and healthy",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_countries",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/countries",
+      "name": "Get Supported Countries",
+      "description": "Get list of supported countries for user registration",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_languages",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/languages",
+      "name": "Get Supported Languages",
+      "description": "Get list of supported languages for user preferences",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_signup",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/signup",
+      "name": "User Signup",
+      "description": "Register a new user account (requires OTP verification)",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phone\": \"+1234567890\",\n  \"password\": \"Password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"countryCode\": \"US\",\n  \"preferredLanguage\": \"en\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_verify_otp",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/verify-otp",
+      "name": "Verify OTP and Activate Account",
+      "description": "Verify OTP code and activate user account",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_signin",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/signin",
+      "name": "User Signin",
+      "description": "Login with phone number and password",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phone\": \"+1234567890\",\n  \"password\": \"Password123\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_refresh_token",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/refresh-token",
+      "name": "Refresh Access Token",
+      "description": "Get new access token using refresh token",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refreshToken\": \"your_refresh_token_here\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_logout",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/logout",
+      "name": "User Logout",
+      "description": "Logout user and deactivate session (requires authentication)",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.access_token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_update_language",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/language",
+      "name": "Update Language Preference",
+      "description": "Update user's preferred language (requires authentication)",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"language\": \"en\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.access_token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_auth_resend_otp",
+      "parentId": "fld_auth",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/auth/resend-otp",
+      "name": "Resend OTP",
+      "description": "Resend OTP to user's phone number",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_otp_send",
+      "parentId": "fld_otp",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/otp/send",
+      "name": "Send OTP",
+      "description": "Send OTP to existing user's phone number",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_otp_verify",
+      "parentId": "fld_otp",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/otp/verify",
+      "name": "Verify OTP",
+      "description": "Verify OTP code for existing user",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_otp_resend",
+      "parentId": "fld_otp",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "url": "{{ _.base_url }}/api/otp/resend",
+      "name": "Resend OTP",
+      "description": "Resend OTP to existing user's phone number",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1737277800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_auth",
+      "parentId": "wrk_tilanet_api",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "name": "Authentication",
+      "description": "User authentication and account management endpoints",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1737277800000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_otp",
+      "parentId": "wrk_tilanet_api",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "name": "OTP Management",
+      "description": "One-Time Password management endpoints",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1737277800000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "wrk_tilanet_api",
+      "parentId": null,
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "name": "Tilanet API",
+      "description": "Complete API collection for Tilanet backend services",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_production",
+      "parentId": "wrk_tilanet_api",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "name": "Production Environment",
+      "data": {
+        "base_url": "https://tilanet-app.azurewebsites.net",
+        "access_token": "",
+        "refresh_token": "",
+        "user_id": "",
+        "phone_number": "+1234567890"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url",
+          "access_token",
+          "refresh_token",
+          "user_id",
+          "phone_number"
+        ]
+      },
+      "color": "#7d69cb",
+      "isPrivate": false,
+      "metaSortKey": -1737277800000,
+      "_type": "environment"
+    },
+    {
+      "_id": "env_staging",
+      "parentId": "wrk_tilanet_api",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "name": "Staging Environment",
+      "data": {
+        "base_url": "https://tilanet-app-staging.azurewebsites.net",
+        "access_token": "",
+        "refresh_token": "",
+        "user_id": "",
+        "phone_number": "+1234567890"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url",
+          "access_token",
+          "refresh_token",
+          "user_id",
+          "phone_number"
+        ]
+      },
+      "color": "#7d69cb",
+      "isPrivate": false,
+      "metaSortKey": -1737277800000,
+      "_type": "environment"
+    },
+    {
+      "_id": "env_local",
+      "parentId": "wrk_tilanet_api",
+      "modified": 1737277800000,
+      "created": 1737277800000,
+      "name": "Local Development",
+      "data": {
+        "base_url": "http://localhost:3000",
+        "access_token": "",
+        "refresh_token": "",
+        "user_id": "",
+        "phone_number": "+1234567890"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url",
+          "access_token",
+          "refresh_token",
+          "user_id",
+          "phone_number"
+        ]
+      },
+      "color": "#7d69cb",
+      "isPrivate": false,
+      "metaSortKey": -1737277800000,
+      "_type": "environment"
+    }
+  ]
+} 

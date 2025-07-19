@@ -9,11 +9,18 @@ fi
 # Run database migrations if DATABASE_URL is set
 if [ -n "$DATABASE_URL" ]; then
     echo "🗄️ Running database migrations..."
-    NODE_ENV=production npm run db:migrate
+    echo "📊 Environment: $NODE_ENV"
+    echo "🔗 Database URL: $(echo $DATABASE_URL | sed 's/:[^:@]*@/:***@/')"
+    
+    # First check database status
+    echo "🔍 Checking database status..."
+    NODE_ENV=production npm run db:check
+    
     if [ $? -eq 0 ]; then
-        echo "✅ Database migrations completed successfully"
+        echo "✅ Database setup completed successfully"
     else
-        echo "⚠️  Database migration failed, continuing with startup..."
+        echo "❌ Database setup failed"
+        echo "⚠️  Attempting to continue with startup..."
     fi
 else
     echo "⚠️  DATABASE_URL not set, skipping database migrations"
