@@ -786,24 +786,28 @@ describe('Authentication API', () => {
 
   describe('Rate Limiting', () => {
     test('should apply rate limiting to signup endpoint', async () => {
-      const requests = Array(5).fill(null).map((_, index) =>
-        request(app)
+      const requests = Array(5).fill(null).map((_, index) => {
+        // Generate unique 10-digit US phone numbers
+        const timestamp = Date.now().toString();
+        const uniqueDigits = timestamp.slice(-8) + index.toString().padStart(2, '0');
+        return request(app)
           .post('/api/auth/signup')
           .send({
-            phone: `+1${Date.now().toString().slice(-9)}${index}`,
+            phone: `+1${uniqueDigits}`,
             password: 'password123',
             firstName: 'Test',
             lastName: 'User',
             countryCode: 'US',
             preferredLanguage: 'en',
-          })
-      );
+          });
+      });
 
       const responses = await Promise.all(requests);
 
-      // All should succeed within normal limits
+      // All should succeed within normal limits (201 success or 409 duplicate)
+      // Note: Rate limiting is disabled in test mode, so we expect all to succeed
       responses.forEach(response => {
-        expect([201, 409]).toContain(response.status); // 201 success or 409 duplicate
+        expect([201, 409]).toContain(response.status);
       });
     });
   });
