@@ -152,6 +152,8 @@ jobs:
         ls -la node_modules/ | head -10
         echo "📋 drizzle-kit check:"
         ls -la node_modules/.bin/ | grep drizzle || echo "drizzle-kit not found in .bin"
+        echo "📋 drizzle-kit package check:"
+        ls -la node_modules/ | grep drizzle || echo "drizzle-kit package not found"
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
@@ -190,7 +192,7 @@ jobs:
     - name: 'Set startup command'
       uses: azure/cli@v1
       with:
-        inlineScript: |
+        inlineScript: |          
           az webapp config set \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP || 'tilanet-rg' }} \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
