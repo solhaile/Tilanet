@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "web:build": "expo export:web",
+    "web:build": "expo export",
     "web:deploy": "npm run web:build && npx serve web-build",
     "build": "expo export",
     "preview": "expo start --web --https"
