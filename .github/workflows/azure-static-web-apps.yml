@@ -45,4 +45,5 @@ jobs:
           api_location: ""
           output_location: ""
           skip_app_build: true
+          action: "upload"
           deployment_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} 
