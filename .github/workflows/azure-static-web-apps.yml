@@ -20,18 +20,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Dependencies
         run: |
-          cd Frontend
+          cd frontend
           npm ci
 
       - name: Build Web App
         run: |
-          cd Frontend
+          cd frontend
           npm run web:build
         env:
           CI: true
@@ -41,7 +41,7 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          app_location: "Frontend/web-build"
+          app_location: "frontend/web-build"
           api_location: ""
           output_location: ""
           skip_app_build: true
