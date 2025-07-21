@@ -127,12 +127,30 @@ function Deploy-Infrastructure {
     Write-Info "Using parameter file: $ParameterFile"
     Write-Info "Deployment name: $DeploymentName"
     
+    # Prompt for database admin password
+    Write-Host ""
+    Write-Warning "Database Configuration Required"
+    Write-Host "PostgreSQL admin password requirements:"
+    Write-Host "- Minimum 8 characters"
+    Write-Host "- Must contain uppercase, lowercase, and number"
+    Write-Host ""
+    
+    $SecurePassword = Read-Host "Enter PostgreSQL admin password" -AsSecureString
+    $DbAdminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword))
+    
+    # Validate password length
+    if ($DbAdminPassword.Length -lt 8) {
+        Write-Error "Password must be at least 8 characters long"
+        return $false
+    }
+    
     # Validate the deployment first
     Write-Info "Validating Bicep template..."
     az deployment group validate `
         --resource-group $ResourceGroupName `
         --template-file main.bicep `
-        --parameters "@$ParameterFile"
+        --parameters "@$ParameterFile" `
+        --parameters dbAdminPassword="$DbAdminPassword"
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Template validation failed"
@@ -143,11 +161,13 @@ function Deploy-Infrastructure {
     
     # Deploy the infrastructure
     Write-Info "Deploying infrastructure..."
+    Write-Info "This may take 10-15 minutes to complete."
     az deployment group create `
         --resource-group $ResourceGroupName `
         --name $DeploymentName `
         --template-file main.bicep `
         --parameters "@$ParameterFile" `
+        --parameters dbAdminPassword="$DbAdminPassword" `
         --verbose
     
     if ($LASTEXITCODE -eq 0) {

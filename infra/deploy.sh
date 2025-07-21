@@ -80,12 +80,29 @@ deploy_infrastructure() {
     print_status "Using parameter file: $parameter_file"
     print_status "Deployment name: $DEPLOYMENT_NAME"
     
+    # Prompt for database admin password
+    echo ""
+    print_warning "Database Configuration Required"
+    echo "PostgreSQL admin password requirements:"
+    echo "- Minimum 8 characters"
+    echo "- Must contain uppercase, lowercase, and number"
+    echo ""
+    read -s -p "Enter PostgreSQL admin password: " DB_ADMIN_PASSWORD
+    echo ""
+    
+    # Validate password length
+    if [[ ${#DB_ADMIN_PASSWORD} -lt 8 ]]; then
+        print_error "Password must be at least 8 characters long"
+        exit 1
+    fi
+    
     # Validate the deployment first
     print_status "Validating Bicep template..."
     az deployment group validate \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --template-file main.bicep \
-        --parameters "@$parameter_file"
+        --parameters "@$parameter_file" \
+        --parameters dbAdminPassword="$DB_ADMIN_PASSWORD"
     
     print_success "Template validation passed"
     
@@ -96,6 +113,7 @@ deploy_infrastructure() {
         --name "$DEPLOYMENT_NAME" \
         --template-file main.bicep \
         --parameters "@$parameter_file" \
+        --parameters dbAdminPassword="$DB_ADMIN_PASSWORD" \
         --verbose
     
     print_success "Infrastructure deployment completed"

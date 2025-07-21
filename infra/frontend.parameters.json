@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "value": "tilanet"
+    },
+    "location": {
+      "value": "West US 2"
+    },
+    "environment": {
+      "value": "prod"
+    },
+    "sku": {
+      "value": "Free"
+    },
+    "repositoryUrl": {
+      "value": "https://github.com/solhaile/tilanet"
+    },
+    "branch": {
+      "value": "main"
+    }
+  }
+} 

@@ -59,8 +59,20 @@ export class AuthService {
         isVerified: false,
       });
 
-      // Send OTP for verification
-      await otpService.sendSmsOtp(newUser.id, userData.phone);
+      // OTP Verification Control via Environment Variable
+      const skipOtpVerification = process.env.SKIP_OTP_VERIFICATION === 'true';
+      
+      if (skipOtpVerification) {
+        logger.info('OTP verification skipped - auto-verifying user', { 
+          userId: newUser.id, 
+          reason: 'SKIP_OTP_VERIFICATION=true' 
+        });
+        await userRepository.update(newUser.id, { isVerified: true });
+        newUser.isVerified = true;
+      } else {
+        // Send OTP for verification
+        await otpService.sendSmsOtp(newUser.id, userData.phone);
+      }
 
       return newUser;
     } catch (error) {
@@ -124,7 +136,12 @@ export class AuthService {
 
       // Check if user is verified
       if (!user.isVerified) {
-        throw new Error('Account not verified. Please verify your phone number first.');
+        const skipOtpVerification = process.env.SKIP_OTP_VERIFICATION === 'true';
+        if (skipOtpVerification) {
+          throw new Error('Account not verified. OTP verification is disabled but user is not verified. Check SKIP_OTP_VERIFICATION setting.');
+        } else {
+          throw new Error('Account not verified. Please verify your phone number first.');
+        }
       }
 
       // Create session and tokens
