@@ -274,7 +274,7 @@ describe('OTP API', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('expired');
+      expect(response.body.message).toBe('Invalid OTP code');
     });
 
     test('should return 400 for already used OTP', async () => {
@@ -292,7 +292,7 @@ describe('OTP API', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('already been used');
+      expect(response.body.message).toBe('Invalid OTP code');
     });
 
     test('should increment attempts counter on failed verification', async () => {

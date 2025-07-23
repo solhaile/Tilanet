@@ -96,20 +96,40 @@ describe('Authentication API', () => {
           .send(validSignupData)
           .expect(201);
 
-        expect(response.body).toMatchObject({
-          success: true,
-          message: expect.stringContaining('Please verify your phone number'),
-          data: {
-            user: {
-              phoneNumber: '+12345678901',
-              firstName: 'John',
-              lastName: 'Doe',
-              preferredLanguage: 'en',
-              isVerified: false,
+        // Check if OTP verification is bypassed
+        const skipOtpVerification = process.env.SKIP_OTP_VERIFICATION === 'true';
+        
+        if (skipOtpVerification) {
+          expect(response.body).toMatchObject({
+            success: true,
+            message: expect.stringContaining('User created successfully'),
+            data: {
+              user: {
+                phoneNumber: '+12345678901',
+                firstName: 'John',
+                lastName: 'Doe',
+                preferredLanguage: 'en',
+                isVerified: true,
+              },
+              requiresVerification: true,
             },
-            requiresVerification: true,
-          },
-        });
+          });
+        } else {
+          expect(response.body).toMatchObject({
+            success: true,
+            message: expect.stringContaining('Please verify your phone number'),
+            data: {
+              user: {
+                phoneNumber: '+12345678901',
+                firstName: 'John',
+                lastName: 'Doe',
+                preferredLanguage: 'en',
+                isVerified: false,
+              },
+              requiresVerification: true,
+            },
+          });
+        }
 
         // Verify user was created in database
         const user = await db.select()
@@ -122,7 +142,7 @@ describe('Authentication API', () => {
         expect(user[0].lastName).toBe('Doe');
         expect(user[0].preferredLanguage).toBe('en');
         expect(user[0].countryCode).toBe('US');
-        expect(user[0].isVerified).toBe(false);
+        expect(user[0].isVerified).toBe(skipOtpVerification);
       });
 
       test('should hash the password correctly', async () => {

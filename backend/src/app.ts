@@ -17,10 +17,7 @@ const app = express();
 app.use(helmet());
 
 // CORS configuration
-const allowedOrigins =
-  process.env.NODE_ENV === 'test'
-    ? ['*']
-    : (process.env.CORS_ORIGIN?.split(',') || []);
+const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
 
 interface CorsOptions {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void;
@@ -29,10 +26,18 @@ interface CorsOptions {
 
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) { callback(null, true); return; }
-    if (allowedOrigins.includes('*')) { callback(null, true); return; }
-    if (allowedOrigins.includes(origin)) { callback(null, true); }
-    else { callback(new Error('Not allowed by CORS')); }
+    
+    // In test environment only, allow all origins for testing purposes
+    if (process.env.NODE_ENV === 'test') { callback(null, true); return; }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true,
 };

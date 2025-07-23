@@ -179,69 +179,63 @@ export class OtpService {
       // Trim whitespace from code
       const trimmedCode = code.trim();
 
-      // Find valid OTP
-      const otpRecord = await db.select()
+      // Get all OTP records for this user and code in a single query to prevent timing attacks
+      const allOtpRecords = await db.select()
         .from(schema.otpCodes)
         .where(and(
           eq(schema.otpCodes.userId, userId),
-          eq(schema.otpCodes.code, trimmedCode),
+          eq(schema.otpCodes.code, trimmedCode)
+        ))
+        .orderBy(schema.otpCodes.createdAt)
+        .limit(5); // Limit to prevent excessive processing
+
+      // Always increment attempts for the most recent valid OTP to prevent timing attacks
+      await db.update(schema.otpCodes)
+        .set({ 
+          attempts: sql`${schema.otpCodes.attempts} + 1`
+        })
+        .where(and(
+          eq(schema.otpCodes.userId, userId),
           eq(schema.otpCodes.isUsed, false),
           gt(schema.otpCodes.expiresAt, new Date())
-        ))
-        .limit(1);
+        ));
 
-      if (otpRecord.length === 0) {
-        // Check if OTP exists but is expired
-        const expiredOtp = await db.select()
-          .from(schema.otpCodes)
-          .where(and(
-            eq(schema.otpCodes.userId, userId),
-            eq(schema.otpCodes.code, trimmedCode),
-            eq(schema.otpCodes.isUsed, false)
-          ))
-          .limit(1);
+      // Check records to determine the appropriate response
+      let latestValidOtp = null;
+      let hasExpiredOtp = false;
+      let hasUsedOtp = false;
 
-        if (expiredOtp.length > 0) {
-          return { success: false, message: 'OTP has expired' };
+      for (const record of allOtpRecords) {
+        if (record.isUsed) {
+          hasUsedOtp = true;
+        } else if (record.expiresAt <= new Date()) {
+          hasExpiredOtp = true;
+        } else {
+          latestValidOtp = record;
+          break; // Use the first valid OTP found
         }
+      }
 
-        // Check if OTP exists but is already used
-        const usedOtp = await db.select()
-          .from(schema.otpCodes)
-          .where(and(
-            eq(schema.otpCodes.userId, userId),
-            eq(schema.otpCodes.code, trimmedCode),
-            eq(schema.otpCodes.isUsed, true)
-          ))
-          .limit(1);
-
-        if (usedOtp.length > 0) {
-          return { success: false, message: 'OTP has already been used' };
+      // Determine response based on OTP state
+      if (!latestValidOtp) {
+        if (hasUsedOtp) {
+          return { success: false, message: 'Invalid OTP code' };
+        } else if (hasExpiredOtp) {
+          return { success: false, message: 'Invalid OTP code' };
+        } else {
+          return { success: false, message: 'Invalid OTP code' };
         }
-
-        // Increment attempts for the most recent OTP for this user
-        await db.update(schema.otpCodes)
-          .set({ 
-            attempts: sql`${schema.otpCodes.attempts} + 1`
-          })
-          .where(and(
-            eq(schema.otpCodes.userId, userId),
-            eq(schema.otpCodes.isUsed, false),
-            gt(schema.otpCodes.expiresAt, new Date())
-          ));
-
-        return { success: false, message: 'Invalid OTP code' };
       }
 
       // Check if OTP has reached max attempts
-      if (otpRecord[0].attempts >= this.MAX_ATTEMPTS) {
+      if (latestValidOtp.attempts >= this.MAX_ATTEMPTS) {
         return { success: false, message: 'Too many failed attempts. Please request a new OTP.' };
       }
 
       // Mark OTP as used
       await db.update(schema.otpCodes)
         .set({ isUsed: true })
-        .where(eq(schema.otpCodes.id, otpRecord[0].id));
+        .where(eq(schema.otpCodes.id, latestValidOtp.id));
 
       // Mark user as verified
       await db.update(schema.users)
