@@ -34,7 +34,7 @@ export const errorHandler = (
   const response: ApiResponse = {
     success: false,
     message,
-    error: process.env.NODE_ENV === 'development' ? err.stack : 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? (err.message || 'Development error') : 'Something went wrong!',
   };
 
   res.status(statusCode).json(response);
