@@ -9,7 +9,7 @@ param environment string = 'prod'
 
 @description('Static Web App SKU')
 @allowed(['Free', 'Standard'])
-param sku string = 'Free'
+param sku string = 'Standard'
 
 @description('GitHub repository URL')
 param repositoryUrl string = 'https://github.com/your-username/tilanet'
@@ -19,15 +19,15 @@ param branch string = 'main'
 
 @description('Build configuration')
 param buildConfig object = {
-  appLocation: 'Frontend'
+  appLocation: 'frontend'
   apiLocation: ''
-  outputLocation: 'web-build'
+  outputLocation: 'dist'
   appBuildCommand: 'npm run web:build'
   apiBuildCommand: ''
 }
 
 // Resource names
-var staticWebAppName = '${baseName}-frontend-${environment}'
+var staticWebAppName = '${baseName}' // '${baseName}-frontend-${environment}'
 
 // Static Web App
 resource staticWebApp 'Microsoft.Web/staticSites@2023-01-01' = {
@@ -39,6 +39,10 @@ resource staticWebApp 'Microsoft.Web/staticSites@2023-01-01' = {
   properties: {
     repositoryUrl: repositoryUrl
     branch: branch
+    stagingEnvironmentPolicy: 'Enabled'
+    allowConfigFileUpdates: true
+    provider: 'GitHub'
+    enterpriseGradeCdnStatus: 'Disabled'
     buildProperties: {
       appLocation: buildConfig.appLocation
       apiLocation: buildConfig.apiLocation
