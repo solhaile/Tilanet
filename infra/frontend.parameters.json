@@ -12,10 +12,10 @@
       "value": "prod"
     },
     "sku": {
-      "value": "Free"
+      "value": "Standard"
     },
     "repositoryUrl": {
-      "value": "https://github.com/solhaile/tilanet"
+      "value": "https://github.com/solhaile/Tilanet"
     },
     "branch": {
       "value": "main"
